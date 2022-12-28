@@ -15,10 +15,6 @@ from jinja2 import Environment, FileSystemLoader
 
 import tkinter
 
-
-
-
-
 currency_to_rub = {
     "AZN": 35.68,
     "BYR": 23.91,
@@ -128,7 +124,7 @@ class Report:
             if year in self._top_cities_count:
                 row.append(self._top_cities_count[year])
             ws.append(row)
-        self._formating_sheet(len(header), len(salary_dynamic), header, ws)
+        self._formating_sheet(len(header), len(self._salary_dynamic), header, ws)
 
         ws = self._wb.create_sheet('Статистика по городам')
         header = ['Город', 'Уровень зарплат', '', 'Город', 'Доля вакансий']
@@ -177,15 +173,15 @@ class Report:
             self._selected_salary_dynamic,
             self._count_dynamic,
             self._selected_count_dynamic,
-            {y: y for y in top_cities_count},
-            top_cities_count,
-            top_cities]
+            {y: y for y in self._top_cities_count},
+            self._top_cities_count,
+            self._top_cities]
         header = ['\tГод\t', 'Средняя зарплата', f'Средняя зарплата - {self._vacancy_name}', 'Количество вакансий',
                   f'Количество вакансий - {self._vacancy_name}']
         pdf_template = template.render({'header': header, 'image_file': 'graph.png', 'round': round,
-                                        'stats': stats, 'vacancy_name': vacancy_name, 'header2': header2})
+                                        'stats': stats, 'vacancy_name': self._vacancy_name, 'header2': header2})
         config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
-        pdfkit.from_string(pdf_template, 'out.pdf', configuration=config)
+        pdfkit.from_string(pdf_template, 'out.pdf', configuration=config, options={"enable-local-file-access": ""})
 
 
 
@@ -320,36 +316,37 @@ def get_top_cities_count(vacancies, allowed_cities):
     return result_dict
 
 
-file_name = input("Введите название файла: ")
-vacancy_name = input("Введите название профессии: ")
-vacancies_info, titles = csv_reader(file_name)
-all_vacancies = csv_filer(vacancies_info, titles)
-chosen_vacancies = list(filter(lambda x: vacancy_name in x.name, all_vacancies))
-all_vacancies_by_year = sort_salaries_by_year(all_vacancies)
-chosen_vacancies_by_year = dict()
-for key in all_vacancies_by_year.keys():
-    chosen_vacancies_by_year[key] = list(filter(lambda x: vacancy_name in x.name, all_vacancies_by_year[key]))
-allowed_cities = get_big_enough_cities(all_vacancies)
+def start():
+    file_name = input("Введите название файла: ")
+    vacancy_name = input("Введите название профессии: ")
+    vacancies_info, titles = csv_reader(file_name)
+    all_vacancies = csv_filer(vacancies_info, titles)
+    chosen_vacancies = list(filter(lambda x: vacancy_name in x.name, all_vacancies))
+    all_vacancies_by_year = sort_salaries_by_year(all_vacancies)
+    chosen_vacancies_by_year = dict()
+    for key in all_vacancies_by_year.keys():
+        chosen_vacancies_by_year[key] = list(filter(lambda x: vacancy_name in x.name, all_vacancies_by_year[key]))
+    allowed_cities = get_big_enough_cities(all_vacancies)
 
-salary_dynamic = get_salary_dynamic(all_vacancies_by_year)
-count_dynamic = get_count_dynamic(all_vacancies_by_year)
-selected_salary_dynamic = get_salary_dynamic(chosen_vacancies_by_year)
-selected_count_dynamic = get_count_dynamic(chosen_vacancies_by_year)
-top_cities = get_top_cities(all_vacancies, allowed_cities)
-top_cities_count = get_top_cities_count(all_vacancies, allowed_cities)
+    salary_dynamic = get_salary_dynamic(all_vacancies_by_year)
+    count_dynamic = get_count_dynamic(all_vacancies_by_year)
+    selected_salary_dynamic = get_salary_dynamic(chosen_vacancies_by_year)
+    selected_count_dynamic = get_count_dynamic(chosen_vacancies_by_year)
+    top_cities = get_top_cities(all_vacancies, allowed_cities)
+    top_cities_count = get_top_cities_count(all_vacancies, allowed_cities)
 
 
-font = Font(name='Calibri', size=11)
-header_font = Font(name='Calibri', size=11, bold=True)
-border = Border(right=Side(color='000000', border_style='thin'), bottom=Side(color='000000', border_style='thin'))
-report = Report(font, header_font, border, salary_dynamic, count_dynamic, selected_salary_dynamic,
-                selected_count_dynamic, top_cities, top_cities_count, vacancy_name)
+    font = Font(name='Calibri', size=11)
+    header_font = Font(name='Calibri', size=11, bold=True)
+    border = Border(right=Side(color='000000', border_style='thin'), bottom=Side(color='000000', border_style='thin'))
+    report = Report(font, header_font, border, salary_dynamic, count_dynamic, selected_salary_dynamic,
+                    selected_count_dynamic, top_cities, top_cities_count, vacancy_name)
 
-report.generate_pdf()
-print("Динамика уровня зарплат по годам:",salary_dynamic)
-print("Динамика количества вакансий по годам:", count_dynamic)
-print("Динамика уровня зарплат по годам для выбранной профессии:", selected_salary_dynamic)
-print("Динамика количества вакансий по годам для выбранной профессии:", selected_count_dynamic)
-print("Уровень зарплат по городам (в порядке убывания):", {k: top_cities[k] for i, k in zip(range(10), top_cities)})
-print("Доля вакансий по городам (в порядке убывания):", {k: top_cities_count[k] for i, k in zip(range(10),
-                                                                                                top_cities_count)})
+    report.generate_pdf()
+    print("Динамика уровня зарплат по годам:",salary_dynamic)
+    print("Динамика количества вакансий по годам:", count_dynamic)
+    print("Динамика уровня зарплат по годам для выбранной профессии:", selected_salary_dynamic)
+    print("Динамика количества вакансий по годам для выбранной профессии:", selected_count_dynamic)
+    print("Уровень зарплат по городам (в порядке убывания):", {k: top_cities[k] for i, k in zip(range(10), top_cities)})
+    print("Доля вакансий по городам (в порядке убывания):", {k: top_cities_count[k] for i, k in zip(range(10),
+                                                                                                    top_cities_count)})

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pdf_template</title>
+</head>
+<body style="font-family: Verdana, sans-serif;">
+    <h1 style="text-align: center">Аналитика по зарплатам и городам для профессии {{ vacancy_name }}</h1>
+    <img src="file:///C:/Users/sac/PycharmProjects/pythonProject2/{{ image_file }}">
+    <h2 style="text-align: center">Статистика по годам</h2>
+    <table style="border-collapse: collapse;  text-align: center">
+        <tr>
+            {% for head in header -%}
+                <th style="border: 1px solid black;">{{ head }}</th>
+            {% endfor %}
+        </tr>
+        {% for k in stats[0] -%}
+            <tr>
+                {% for d in stats -%}
+                    {% if k in d -%}
+                        <td style="border: 1px solid black;">{{ d[k] }}</td>
+                    {% endif -%}
+                {% endfor %}
+            </tr>
+        {% endfor -%}
+    </table>
+    <h2 style="text-align: center">Статистика по городам</h2>
+    <table style="border-collapse: collapse;  text-align: center; align-content: center">
+        <tr>
+            {% for head in header2[:2] -%}
+                <th style="border: 1px solid black;">{{ head }}</th>
+            {% endfor -%}
+            <th></th>
+            {% for head in header2[3:] -%}
+                <th style="border: 1px solid black;">{{ head }}</th>
+            {% endfor -%}
+        </tr>
+        {% for k in stats[-1] -%}
+            <tr>
+                <td style="border: 1px solid black;">{{ stats[-3][k] }}</td>
+                <td style="border: 1px solid black;">{{ stats[-2][k] }}</td>
+                <td></td>
+                <td style="border: 1px solid black;">{{ stats[-3][k] }}</td>
+                <td style="border: 1px solid black;">{{ round(stats[-1][k]*100, 2) }}%</td>
+            </tr>
+        {% endfor -%}
+    </table>
+</body>
+</html>

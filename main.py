@@ -1,7 +1,7 @@
 from tables_handler import InputConnect
 from stat_handler import start
 mode = input("Введите данные для печати: ")
-if mode == "Вакансии":
+if mode == "Вакансии и чота":
     ic = InputConnect()
     ic.handle_vacancies()
 elif mode == "Статистика":

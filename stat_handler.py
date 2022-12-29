@@ -28,10 +28,39 @@ currency_to_rub = {
     "UZS": 0.0055,
 }
 class Report:
+    """ Класс для составленения отчёта
+
+    Attributes:
+        _font (Font): задает шрифт в Excel
+        _header_font (Font): задает шрифт в заголовкам в Excel
+        _border (Border): задает границы в Excel
+        _salary_dynamic: динамика зарплат
+        _count_dynamic: динамика количества вакансий
+        _selected_salary_dynamic: динамика зарлпат одной профессии
+        _selected_count_dynamic: динамика кол-ва вакансий одной профессии
+        _top_cities: топ городов по зарплатам
+        _top_cities_count: топ городов по кол-ву вакансий
+        _vacancy_name (str): название профессии
+
+    """
     def __init__(self, font, header_font, border,
                  _salary_dynamic, _count_dynamic,
                  _selected_salary_dynamic, _selected_count_dynamic,
                  _top_cities, _top_cities_count, _vacancy_name):
+        """Инизиализирует Report
+
+        Args:
+            font (Font): задает шрифт в Excel
+            header_font (Font): задает шрифт в заголовкам в Excel
+            border (Border): задает границы в Excel
+            _salary_dynamic: динамика зарплат
+            _count_dynamic: динамика количества вакансий
+            _selected_salary_dynamic: динамика зарлпат одной профессии
+            _selected_count_dynamic: динамика кол-ва вакансий одной профессии
+            _top_cities: топ городов по зарплатам
+            _top_cities_count: топ городов по кол-ву вакансий
+            _vacancy_name (str): название профессии
+        """
         self._wb = openpyxl.Workbook()
         self._header_font = header_font
         self._font = font
@@ -45,6 +74,8 @@ class Report:
         self._vacancy_name = _vacancy_name
 
     def generate_charts(self):
+        """Генерирует графики
+        """
         matplotlib.use('TkAgg')
         plt.rc('font', size=8)
         plt.rc('axes', titlesize=13)
@@ -61,6 +92,7 @@ class Report:
         figure.savefig('graph.png')
 
     def add_salary_dynamic_chart(self, figure):
+        """Генерирует график зарплат"""
         subplot = figure.add_subplot(2, 2, 1)
         x = list(self._salary_dynamic)
         y1 = [self._salary_dynamic[k] for k in x]
@@ -73,6 +105,7 @@ class Report:
         subplot.set(title='Уровень зарплат по годам')
 
     def add_count_dynamic_chart(self, figure):
+        """Генерирует график кол-ва вакансий"""
         subplot = figure.add_subplot(2, 2, 2)
         x = list(self._count_dynamic)
         y1 = [self._count_dynamic[k] for k in x]
@@ -85,6 +118,7 @@ class Report:
         subplot.set(title='Количество вакансий по годам')
 
     def add_top_cities_chart(self, figure):
+        """Генерирует график топа городов"""
         subplot = figure.add_subplot(2, 2, 3)
         x = list(self._top_cities)[:10]
         y = [self._top_cities[k] for k in x]
@@ -95,6 +129,7 @@ class Report:
         subplot.set(title='Уровень зарплат по городам')
 
     def add_top_cities_count_chart(self, figure):
+        """Генерирует график кол-ва городов"""
         subplot = figure.add_subplot(2, 2, 4)
         x = list(self._top_cities_count)[:10][::-1]
         y = [self._top_cities_count[k] for k in x]
@@ -104,6 +139,7 @@ class Report:
         subplot.set(title='Доля вакансий по городам')
 
     def generate_excel(self):
+        """Генериует Excel таблицу"""
         ws = self._wb.active
         ws.title = 'Статистика по годам'
         header = ['Год', 'Средняя зарплата', f'Средняя зарплата - {self._vacancy_name}', 'Количество вакансий',
@@ -143,10 +179,22 @@ class Report:
         self._wb.save('report.xlsx')
 
     def _calculate_column_width(self, column_values):
+        """Высчитывает ширину колонки
+
+        Args:
+            column_values: значения в колонке
+        """
         max_width = len(str(max(column_values, key = lambda x: len(str(x)))))
         return  max_width + 2
 
     def _formating_sheet(self, row_len, column_len, header, sheet):
+        """
+
+        :param row_len: длина строки
+        :param column_len: длина колонки
+        :param header: заголовок
+        :param sheet: лист
+        """
         A_ord = ord('A')
         for column_ord in range(row_len):
             column = chr(column_ord + A_ord)
@@ -161,7 +209,10 @@ class Report:
                 cell.border = self._border
 
     def generate_pdf(self):
+        """
+        Генерирует pdf файл
 
+        """
         self.generate_charts()
         self.generate_excel()
         header2 = ['Город', 'Уровень зарплат', '', 'Город', 'Доля вакансий']
@@ -184,8 +235,17 @@ class Report:
         pdfkit.from_string(pdf_template, 'out.pdf', configuration=config, options={"enable-local-file-access": ""})
 
 
-
 class Vacancy:
+    """
+    Класс представляющий вакансию
+
+    name: Название
+    salary_from: минимальное значение зарплаты
+    salary_to: максимальное значение зарплаты
+    salary_currency: валюта зарплаты
+    area_name: город
+    published_at: дата публикации
+    """
     def __init__(self, name, salary_from, salary_to, salary_currency, area_name,
                  published_at):
         self.name = name
@@ -196,10 +256,19 @@ class Vacancy:
         self.published_at = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z")
 
     def get_salary_in_rub(self):
+        """
+        Вычисляет зарплату в рублях
+        :return: зарплата в рублях
+        """
         return currency_to_rub[self.salary_currency] * (self.salary_to + self.salary_from) / 2
 
 
 def csv_reader(file_name):
+    """
+    Считывает .csv файл
+    :param file_name: название файла
+    :return: Вакансии и заголовки таблицы
+    """
     vacancies = []
     titles = []
     with open(file_name, 'r', encoding='utf-8-sig') as csvfile:
@@ -216,6 +285,12 @@ def csv_reader(file_name):
 
 
 def csv_filer(vacancies_list, titles):
+    """Формирует вакансии
+
+    :param vacancies_list: список информации о вакансиях
+    :param titles: заголовки
+    :return: вакансии
+    """
     vacancies_objects = []
     for info in vacancies_list:
         new_vacancy = Vacancy(info[titles.index('name')],
@@ -230,6 +305,11 @@ def csv_filer(vacancies_list, titles):
 
 
 def sort_salaries_by_year(vacancies):
+    """
+    Распределяет вакансии по годам
+    :param vacancies: вакансии
+    :return: вакансии по годам
+    """
     vacancies_by_year = dict()
     for vacancy in vacancies:
         year = vacancy.published_at.year
@@ -246,6 +326,11 @@ def sort_salaries_by_year(vacancies):
 
 
 def get_salary_dynamic(vacancies_by_year):
+    """
+    Вычисляет динамику зарплат
+    :param vacancies_by_year: вакансии по годам
+    :return: динамика зарплат
+    """
     salaries_dynamic = dict()
     for year in sorted(vacancies_by_year.keys()):
         if len(vacancies_by_year[year]) == 0:
@@ -257,12 +342,22 @@ def get_salary_dynamic(vacancies_by_year):
 
 
 def get_count_dynamic(vacancies_by_year):
+    """
+    Вычисляет динамику кол-ва вакансий
+    :param vacancies_by_year: вакансии по годам
+    :return: динамика кол-ва вакансий
+    """
     count_dynamic = dict()
     for year in sorted(vacancies_by_year.keys()):
         count_dynamic[year] = len(vacancies_by_year[year])
     return count_dynamic
 
 def get_big_enough_cities(vacancies):
+    """
+    Вычисляет города, у которых процент вакансий >= 1%
+    :param vacancies: вакансии
+    :return: города
+    """
     cities = dict()
     for vacancy in vacancies:
         if not (vacancy.area_name in cities.keys()):
@@ -278,6 +373,12 @@ def get_big_enough_cities(vacancies):
 
 
 def get_top_cities(vacancies, allowed_cities):
+    """
+    Вычисляет топ городов
+    :param vacancies: вакансии
+    :param allowed_cities: разрешённые города
+    :return: топ городов
+    """
     cities = dict()
     for vacancy in vacancies:
         if not(vacancy.area_name in allowed_cities):
@@ -296,6 +397,12 @@ def get_top_cities(vacancies, allowed_cities):
 
 
 def get_top_cities_count(vacancies, allowed_cities):
+    """
+    Вычисляет топ городов по количеству вакансий.
+    :param vacancies: вакансии
+    :param allowed_cities: разрешённые города
+    :return: топ городов по кол-ву вакансий
+    """
     cities = dict()
     for vacancy in vacancies:
         if not(vacancy.area_name in allowed_cities):
